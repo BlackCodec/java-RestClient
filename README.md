@@ -20,3 +20,7 @@ Is possible to disable certificate validation using the method disableCertificat
 
     This is the very first release.
 
+---
+### License: 
+
+**GPL v3.0**, see file license.txt
