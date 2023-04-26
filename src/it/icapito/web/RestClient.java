@@ -6,6 +6,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
@@ -44,10 +45,10 @@ public class RestClient {
 		public void clearHeaders() { this.headers.clear(); }
 	}
 	
-	public enum HttpMethod { GET, POST, PUT, DELETE, PATCH, HEAD, TRACE, CONNECT }
+	public enum HttpRequestMethod { GET, POST, PUT, DELETE, PATCH, HEAD, TRACE, CONNECT }
 	
 	public static class HttpRequest extends HttpMessage {
-		private HttpMethod method = HttpMethod.GET;
+		private HttpRequestMethod method = HttpRequestMethod.GET;
 		private String url = null;
 		private HttpResponse response = null;
 		private SSLSocketFactory defaultSocketFactory;
@@ -59,10 +60,11 @@ public class RestClient {
 			this.defaultSocketFactory = HttpsURLConnection.getDefaultSSLSocketFactory();
 			this.defaultHostnameVerifier = HttpsURLConnection.getDefaultHostnameVerifier();
 		}
-		public void setMethod(HttpMethod method) { this.method = method; }
+		
+		public void setMethod(HttpRequestMethod method) { this.method = method; }
 		public void setUrl(String url) { this.url = url.trim(); }
 		public String getUrl() { return this.url; }
-		public HttpMethod getMethod() { return this.method; }
+		public HttpRequestMethod getMethod() { return this.method; }
 		public void setResponse(HttpResponse response) { this.response = response; }
 		public HttpResponse getResponse() { return this.response; }
 		public void addBasicAuthentication(String username, String password) {
@@ -77,7 +79,7 @@ public class RestClient {
 			try {
 				URL urlObj = new URL(this.url);
 				connection = (HttpsURLConnection) urlObj.openConnection();
-				if (this.isSupportedMethod(connection) connection.setRequestMethod(this.method.name());
+				if (this.isSupportedMethod(connection)) connection.setRequestMethod(this.method.name());
 				else this.setRequestMethod(connection);
 				for (Entry<String, String> header: this.getHeaders().entrySet()) 
 					connection.addRequestProperty(header.getKey(), header.getValue());
@@ -105,9 +107,10 @@ public class RestClient {
 			} 
 			return contenuto.toString();
 		}
-		public void enableCertificateValidation() {
+		public boolean enableCertificateValidation() {
 			HttpsURLConnection.setDefaultSSLSocketFactory(this.defaultSocketFactory);
 			HttpsURLConnection.setDefaultHostnameVerifier(this.defaultHostnameVerifier);
+			return true;
 		}
 		public boolean disableCertificateValidation() {
 			try {
@@ -133,7 +136,7 @@ public class RestClient {
 
 		private boolean isSupportedMethod(HttpsURLConnection con) {
 			try {
-				Field methods = HttpURLConnection.class.getDeclaredField("methods");
+				Field methods = java.net.HttpURLConnection.class.getDeclaredField("methods");
 				methods.setAccessible(true);
 				Object value = methods.get(con);
 				String[] values = (String[])value;
@@ -154,7 +157,7 @@ public class RestClient {
 					target = delegate.get(c);
 			        } else
 	        		    target = c;
-				final Field f = HttpURLConnection.class.getDeclaredField("method");
+				final Field f = java.net.HttpURLConnection.class.getDeclaredField("method");
 				f.setAccessible(true);
 				f.set(target, this.method.name());
 				return true;

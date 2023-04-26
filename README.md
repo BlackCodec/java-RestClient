@@ -1,7 +1,7 @@
 # java-RestClient
 A simple rest client in less then **200** lines
 
-Current release: 20230426.0900
+Current release: 20230426.1100
 
 ---
 ## Description
@@ -15,6 +15,11 @@ Is possible to disable certificate validation using the method disableCertificat
 
 ---
 ### Releases:
+
+- **20230426.1100:**
+
+    Adjust code and change the enum from HttpMethod to HttpRequestMethod.
+
 
 - **20230426.0900:**
 
