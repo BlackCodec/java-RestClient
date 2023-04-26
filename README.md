@@ -1,7 +1,7 @@
 # java-RestClient
-A simple rest client in less then **150** lines
+A simple rest client in less then **200** lines
 
-Current release: 20220602.1530
+Current release: 20230426.0900
 
 ---
 ## Description
@@ -15,6 +15,11 @@ Is possible to disable certificate validation using the method disableCertificat
 
 ---
 ### Releases:
+
+- **20230426.0900:**
+
+    Added support for PATCH http method.
+
 
 - **20220602.1530:**
 

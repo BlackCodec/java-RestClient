@@ -1,4 +1,4 @@
-/** @Release: 20220602.1530 */
+/** @Release: 20230426.0900 */
 package it.icapito.web;
 
 import java.io.BufferedReader;
@@ -54,7 +54,7 @@ public class RestClient {
 		private HostnameVerifier defaultHostnameVerifier;
 		private Exception error = null;
 		
-		public HttpRequest() { 
+		public HttpRequest() {
 			super();
 			this.defaultSocketFactory = HttpsURLConnection.getDefaultSSLSocketFactory();
 			this.defaultHostnameVerifier = HttpsURLConnection.getDefaultHostnameVerifier();
@@ -77,7 +77,8 @@ public class RestClient {
 			try {
 				URL urlObj = new URL(this.url);
 				connection = (HttpsURLConnection) urlObj.openConnection();
-				connection.setRequestMethod(this.method.name());
+				if (this.isSupportedMethod(connection) connection.setRequestMethod(this.method.name());
+				else this.setRequestMethod(connection);
 				for (Entry<String, String> header: this.getHeaders().entrySet()) 
 					connection.addRequestProperty(header.getKey(), header.getValue());
 				if (this.hasBody()) {
@@ -129,6 +130,39 @@ public class RestClient {
 				return false;
 			}
 		}
+
+		private boolean isSupportedMethod(HttpsURLConnection con) {
+			try {
+				Field methods = HttpURLConnection.class.getDeclaredField("methods");
+				methods.setAccessible(true);
+				Object value = methods.get(con);
+				String[] values = (String[])value;
+				for (String m: values)
+					if (m.equalsIgnoreCase(this.method.name())) return true;
+			} catch(Exception e) {
+				this.error = e;
+			}
+			return false;
+		}
+	
+		private boolean setRequestMethod(final HttpsURLConnection c) {
+			try {
+			    	final Object target;
+	        		if (c instanceof sun.net.www.protocol.https.HttpsURLConnectionImpl) {
+	        			final Field delegate = sun.net.www.protocol.https.HttpsURLConnectionImpl.class.getDeclaredField("delegate");
+					delegate.setAccessible(true);
+					target = delegate.get(c);
+			        } else
+	        		    target = c;
+				final Field f = HttpURLConnection.class.getDeclaredField("method");
+				f.setAccessible(true);
+				f.set(target, this.method.name());
+				return true;
+			} catch (IllegalAccessException | NoSuchFieldException e) {
+				this.error = e;
+			}
+			return false;
+		}
 	}
 	
 	public static class HttpResponse extends HttpMessage {
@@ -145,5 +179,5 @@ public class RestClient {
 	}
 	
 	public static HttpRequest createRequest() { return new HttpRequest(); }
-	private static boolean stringValidate(String input) {  return (input != null && !input.trim().isEmpty() && !input.equalsIgnoreCase("null") && !input.equalsIgnoreCase("")); }
+	private static boolean stringValidate(String input) {  return (input != null && !input.trim().isEmpty() && !input.trim().equalsIgnoreCase("null") && !input.trim().equalsIgnoreCase("")); }
 }
